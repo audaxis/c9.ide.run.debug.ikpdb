@@ -1,0 +1,21 @@
+{
+  "name": "inouk.ikpdb",
+  "description": "Inouk Python DeBugger plugin for Cloud9 IDE",
+  "version": "0.0.1",
+  "author": "Cyril MORISSE",
+  "contributors": [
+    {
+      "name": "Cyril MORISSE",
+      "email": "cmorisse@boxes3.net"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://cmorisse@bitbucket.org/cmorisse/ikpdb.git"
+  },
+  "plugins": {
+  },
+  "categories": ["miscellaneous"],
+  "licenses": [
+  ]pwd
+}
