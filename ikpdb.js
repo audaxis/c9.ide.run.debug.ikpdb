@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "c9", "debugger"
+        "Plugin", "c9", "util", "debugger"
     ];
     main.provides = ["ikpdb"];
     return main;
@@ -8,6 +8,7 @@ define(function(require, exports, module) {
     function main(options, imports, register) {
         /****( IDE connection )*****/
         var Plugin = imports.Plugin;
+        var util = imports.util;        
         var debug = imports["debugger"];
         var panels = imports.panels;
         var settings = imports.settings;
@@ -152,7 +153,7 @@ define(function(require, exports, module) {
                 column: 0,
                 id: frame.id,
                 line: parseInt(frame.line_number, 10) - 1,  // IKPdb lines are 1 based
-                path: frame.file_path,
+                path: util.normalizePath(frame.file_path),
                 sourceId: frame.file_path,
                 thread: thread,
                 istop: (i === 0),
@@ -488,7 +489,6 @@ define(function(require, exports, module) {
             // request children of a variable
             var args = { id: variable.ref };
             ikpdbs.sendCommand("getProperties", args, function(err, reply) {
-                console.error("Implement error handling", err);
                 if (err)
                     return callback && callback(err);
                 else if (reply.result.properties.length === 0)
@@ -569,10 +569,12 @@ define(function(require, exports, module) {
              * @readonly
              */
             get state(){ return state; },
+            
             /**
              * 
              */
             get attached(){ return attached; },
+            
             /**
              * Whether the debugger will break when it encounters any exception.
              * This includes exceptions in try/catch blocks.
@@ -580,6 +582,7 @@ define(function(require, exports, module) {
              * @readonly
              */
             get breakOnExceptions(){ return false; },
+            
             /**
              * Whether the debugger will break when it encounters an uncaught 
              * exception.
