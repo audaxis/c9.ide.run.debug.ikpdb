@@ -15,8 +15,7 @@
   },
   "plugins": {
   },
-  "categories": ["core"],
-  "licenses": [
-  ],
+  "categories": ["miscellaneous"],
+  "licenses": ["Private"],
   "engines": {"c9": ">=3.0.0"}
 }

@@ -4,6 +4,7 @@ This project is an attempt to write a cloud9 integrated Python debugger.
 
 This is a work in progress ; not usable right now.
 
+Currently this work is Private !
 
 To use:
 
