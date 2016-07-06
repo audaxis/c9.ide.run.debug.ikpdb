@@ -1,7 +1,7 @@
 {
   "name": "inouk.ikpdb",
   "description": "Inouk Python DeBugger plugin for Cloud9 IDE",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "author": "Cyril MORISSE",
   "contributors": [
     {
@@ -15,7 +15,8 @@
   },
   "plugins": {
   },
-  "categories": ["miscellaneous"],
+  "categories": ["core"],
   "licenses": [
-  ]pwd
+  ],
+  "engines": {"c9": ">=3.0.0"}
 }
