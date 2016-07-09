@@ -132,7 +132,7 @@ define(function(require, exports, module) {
             }
         }
 
-        function buildFrame(thread, frame, i) {
+        function buildFrame(thread_id, frame, i) {
             var variables = [];
 
             // build scopes and variables for this frame
@@ -155,7 +155,7 @@ define(function(require, exports, module) {
                 line: parseInt(frame.line_number, 10) - 1,  // IKPdb lines are 1 based
                 path: util.normalizePath(frame.file_path),
                 sourceId: frame.file_path,
-                thread: thread,
+                thread: thread_id,
                 istop: (i === 0),
                 variables: variables
             });
@@ -182,6 +182,8 @@ define(function(require, exports, module) {
             setState("stopped");
             emit("frameActivate", { frame: stack[0] });
 
+            // TODO: Rework for post mortem handling
+            // TODO: utiliser showError()
             if (message.err === "segfault") {
                 showError("GDB has detected a segmentation fault and execution has stopped!");
                 emit("exception", stack[0], new Error("Segfault!"));
@@ -228,8 +230,13 @@ define(function(require, exports, module) {
          * Called by c9 when user clic on enable / disable breakpoints
          */
         function changeBreakpoint(bp, callback) {
-            bp.data.breakpoint_number = bp.id;
-            ikpdbs.sendCommand("changeBreakpointState", bp.data, function(err) {
+            if(bp.data != undefined) {
+                console.error("Unexpected bp.data in changeBreakpoint(",bp,") ");
+                callback(new Error("Unexpected bp.data in changeBreakpoint()")); 
+            }
+                
+            bp.breakpoint_number = bp.id;
+            ikpdbs.sendCommand("changeBreakpointState", bp, function(err) {
                 callback && callback(err, bp);
             });
         }
