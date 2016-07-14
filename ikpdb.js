@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "c9", "util", "debugger"
+        "Plugin", "c9", "util", "debugger", "dialog.error"
     ];
     main.provides = ["ikpdb"];
     return main;
@@ -10,6 +10,7 @@ define(function(require, exports, module) {
         var Plugin = imports.Plugin;
         var util = imports.util;        
         var debug = imports["debugger"];
+        var showError = imports["dialog.error"].show;        
         var panels = imports.panels;
         var settings = imports.settings;
         
@@ -75,6 +76,7 @@ define(function(require, exports, module) {
 
          /* Called by Cloud9 when user start execution */
         function runScript(callback) {
+            debug.getElement("btnSuspend").setAttribute("disabled", true);
             sendExecutionCommand("runScript", callback);
         }
          /* Called by Cloud9 when user clic on the Step over / F10 button */
@@ -94,7 +96,16 @@ define(function(require, exports, module) {
          * Called by Cloud9 when user clic on the Resume / F8 button
          */
         function resume(callback) {
+            debug.getElement("btnSuspend").setAttribute("disabled", true);
             sendExecutionCommand("resume", callback);
+        }
+
+        /**
+         * Called by Cloud9 when user clic on Suspend
+         */
+        function suspend() {
+            var errorMessage =  "Suspend is not (yet) suported in IKPdb.";
+            showError(errorMessage, 5000);
         }
 
         /**
@@ -182,17 +193,30 @@ define(function(require, exports, module) {
             setState("stopped");
             emit("frameActivate", { frame: stack[0] });
 
-            // TODO: Rework for post mortem handling
-            // TODO: utiliser showError()
-            if (message.err === "segfault") {
-                showError("GDB has detected a segmentation fault and execution has stopped!");
-                emit("exception", stack[0], new Error("Segfault!"));
-                btnResume.$ext.style.display = "none";
-                btnSuspend.$ext.style.display = "inline-block";
-                btnSuspend.setAttribute("disabled", true);
-                btnStepOut.setAttribute("disabled", true);
-                btnStepInto.setAttribute("disabled", true);
-                btnStepOver.setAttribute("disabled", true);
+            /**
+             * For exception, we build a variable describing hte exception
+             * that c9 will inject in watch expressions.
+             */
+            if (message.exception) {
+                showError("IKpdb has detected an unmanaged exception \""+
+                          message.exception.type+"\":"+message.exception.info+
+                          ". Execution has stopped!",
+                          10000);
+                var exception = new Variable({
+                    ref: null,
+                    name: message.exception.type,
+                    value: message.exception.info,
+                    type: "Exception",
+                    children: false,
+                    properties: null,
+                    scope: "Locals"
+                });
+                
+                emit("exception", {frame: stack[0], frames: stack, exception: exception});
+                debug.getElement("btnSuspend").setAttribute("disabled", true);
+                debug.getElement("btnStepOut").setAttribute("disabled", true);
+                debug.getElement("btnStepInto").setAttribute("disabled", true);
+                debug.getElement("btnStepOver").setAttribute("disabled", true);
             }
             else {
                 emit("break", { frame: stack[0], frames: stack });
@@ -441,7 +465,6 @@ define(function(require, exports, module) {
 
             // Update GUI
             emit("frameActivate", {frame: null});
-            // TODO: How to display Debugger Panel
         }        
 
         /*
@@ -616,6 +639,7 @@ define(function(require, exports, module) {
             attach: attach,
             detach: detach,
             resume: resume,
+            suspend: suspend,
             stepOver: stepOver,
 
             /**
