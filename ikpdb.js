@@ -76,7 +76,6 @@ define(function(require, exports, module) {
 
          /* Called by Cloud9 when user start execution */
         function runScript(callback) {
-            debug.getElement("btnSuspend").setAttribute("disabled", true);
             sendExecutionCommand("runScript", callback);
         }
          /* Called by Cloud9 when user clic on the Step over / F10 button */
@@ -96,7 +95,6 @@ define(function(require, exports, module) {
          * Called by Cloud9 when user clic on the Resume / F8 button
          */
         function resume(callback) {
-            debug.getElement("btnSuspend").setAttribute("disabled", true);
             sendExecutionCommand("resume", callback);
         }
 
