@@ -5,6 +5,8 @@
     "python2",
     "${debug?-m}",
     "${debug?ikpdb}",
+    "${debug?--ikpdb-port=15471}",
+//    "${debug?--ikpdb-log=GNC}",   // Uncomment this line to log debugger output
     "$file",
     "$args"
   ],
@@ -14,7 +16,7 @@
   "env": {
     "PYTHONPATH": "$python_path"
   },
-  "debugport": 15470,
+  "debugport": 15471,
   "debugger": "pythondebug",
   "executable": "$file",
   "maxdepth": 50
