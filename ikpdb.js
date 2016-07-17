@@ -515,7 +515,7 @@ define(function(require, exports, module) {
         /* called by cloud9 when user request to develop variable's children */
         function getProperties(variable, callback) {
             // request children of a variable
-            var args = { id: variable.ref };
+            var args = { id: variable.ref, name: variable.name };
             ikpdbs.sendCommand("getProperties", args, function(err, reply) {
                 if (err)
                     return callback && callback(err);
