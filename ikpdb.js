@@ -512,7 +512,7 @@ define(function(require, exports, module) {
             callback(null, scope.variables, scope, frame);
          }
 
-        /* called by cloud9 when user request to develop variable's children */
+        /* called by cloud9 when user request to expand variable's children */
         function getProperties(variable, callback) {
             // request children of a variable
             var args = { id: variable.ref, name: variable.name };
