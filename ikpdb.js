@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "c9", "util", "debugger", "dialog.error"
+        "Plugin", "c9", "util", "debugger", "dialog.error", 
+        "notification.bubble"
     ];
     main.provides = ["ikpdb"];
     return main;
@@ -9,8 +10,11 @@ define(function(require, exports, module) {
         /****( IDE connection )*****/
         var Plugin = imports.Plugin;
         var util = imports.util;        
+
         var debug = imports["debugger"];
-        var showError = imports["dialog.error"].show;        
+        var showError = imports["dialog.error"].show;
+        var bubble = imports["notification.bubble"];
+
         var panels = imports.panels;
         var settings = imports.settings;
         
@@ -102,7 +106,7 @@ define(function(require, exports, module) {
          * Called by Cloud9 when user clic on Suspend
          */
         function suspend() {
-            var errorMessage =  "Suspend is not (yet) suported in IKPdb.";
+            var errorMessage =  "IKPdb Error: Suspend is not supported (yet...) !";
             showError(errorMessage, 5000);
         }
 
@@ -233,8 +237,23 @@ define(function(require, exports, module) {
             emit("stateChange", {state: state});
         }
 
+        function breakpointManagementWarning(commandSpecificMessage) {
+            if(state == "running") {
+                var msg = "IKPdpb Error: You can't manage breakpoints while" +
+                          " programm is running. Breakpoints can be manipulated " +
+                          "before debugger launch or when programm is stopped. " +
+                          commandSpecificMessage;
+                showError(msg, 10000);
+                bubble.popup(commandSpecificMessage, true, function() {
+                    console.log("Breakpoint Management warning bubble closed.");
+                });         
+            };
+        }
         
         function setBreakpoint(bp, callback) {
+            // TODO: Check with c9 how we can prevent user to set breakpoint
+            breakpointManagementWarning("Breakpoint creation request will be send to debugger at next programm break !.");
+            
             bp.data.file_name = bp.data.path.substring(1);  // IKPdb expects a filename so we remove leading /
             bp.data.line_number = bp.data.line + 1;  // IKPdb expects 1 based lines
             ikpdbs.sendCommand("setBreakpoint", bp.data, function(err, reply) {
@@ -252,13 +271,15 @@ define(function(require, exports, module) {
          * Called by c9 when user clic on enable / disable breakpoints
          */
         function changeBreakpoint(bp, callback) {
-            if(bp.data != undefined) {
-                console.error("Unexpected bp.data in changeBreakpoint(",bp,") ");
-                callback(new Error("Unexpected bp.data in changeBreakpoint()")); 
+            // TODO: Check with c9 how we can prevent user to set breakpoint
+            breakpointManagementWarning("Breakpoint modification request will be send to debugger at next programm break !.");
+            
+            if(!bp.data) {
+                console.error("Missing bp.data in changeBreakpoint(",bp,") ");
             }
                 
-            bp.breakpoint_number = bp.id;
-            ikpdbs.sendCommand("changeBreakpointState", bp, function(err) {
+            bp.data.breakpoint_number = bp.id;
+            ikpdbs.sendCommand("changeBreakpointState", bp.data, function(err) {
                 callback && callback(err, bp);
             });
         }
@@ -268,6 +289,9 @@ define(function(require, exports, module) {
          * Called by c9 when user remove an existing breakpoint.
          */
         function clearBreakpoint(bp, callback) {
+            // TODO: Check with c9 how we can prevent user to set breakpoint
+            breakpointManagementWarning("Breakpoint removal request will be send to debugger at next programm break !.");
+
             bp.data.breakpoint_number = bp.id;
             ikpdbs.sendCommand("clearBreakpoint", bp.data, function(err) {
                 callback && callback(err, bp);
