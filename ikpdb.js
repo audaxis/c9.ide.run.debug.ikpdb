@@ -61,45 +61,58 @@ define(function(require, exports, module) {
         });
        
 
-        /***** Event handlers *****/
+        /*****(Event handlers and Methods )*****/
 
-        /***** Methods *****/
+        function sendCommand(command, args, callback) {
+            ikpdbs.sendCommand(command, args, function(err, reply) {
+                /*****
+                 * Process the messages IKPdb could send
+                 * Note that error messages ar only displayed if IKPdb returned
+                 * an error.
+                 */
+                reply.info_messages.forEach(function (iMessage) {
+                    console.log(iMessage);
+                });
+                reply.warning_messages.forEach(function (wMessage) {
+                    bubble.popup(wMessage, false);
+                });
 
-        /**
-         * A special case of sendCommand that demands a status update on reply.
-         */
-        function sendExecutionCommand(command, callback) {
-            ikpdbs.sendCommand(command, {}, function(err, reply) {
-                if (err)
+                if (err) {
+                    // Display errors 
+                    var errMessage = reply.error_messages.join(" ");
+                    showError(errMessage, 10000);
                     return callback && callback(err);
-
-                setState(reply.result.executionStatus);
-                callback && callback();
+                }
+                
+                if(reply.result.executionStatus)
+                    setState(reply.result.executionStatus);
+                
+                callback && callback(err, reply);
             });
         }
 
          /* Called by Cloud9 when user start execution */
         function runScript(callback) {
-            sendExecutionCommand("runScript", callback);
+            sendCommand("runScript", {}, callback);
         }
          /* Called by Cloud9 when user clic on the Step over / F10 button */
         function stepOver(callback) {
-            sendExecutionCommand("stepOver", callback);
+            sendCommand("stepOver", {}, callback);
         }
          /* Called by Cloud9 when user clic on the Step over / F10 button */
         function stepInto(callback) {
-            sendExecutionCommand("stepInto", callback);
+            sendCommand("stepInto", {}, callback);
         }
          /* Called by Cloud9 when user clic on the Step over / F10 button */
         function stepOut(callback) {
-            sendExecutionCommand("stepOut", callback);
+            sendCommand("stepOut", {}, callback);
         }
 
         /**
          * Called by Cloud9 when user clic on the Resume / F8 button
          */
         function resume(callback) {
-            sendExecutionCommand("resume", callback);
+            sendCommand("resume", {}, callback);
         }
 
         /**
@@ -107,7 +120,7 @@ define(function(require, exports, module) {
          */
         function suspend() {
             var errorMessage =  "IKPdb Error: Suspend is not supported (yet...) !";
-            showError(errorMessage, 5000);
+            showError(errorMessage, 15000);
         }
 
         /**
@@ -195,9 +208,23 @@ define(function(require, exports, module) {
             setState("stopped");
             emit("frameActivate", { frame: stack[0] });
 
+            /*****
+             * Process the 3 levels of messags IKPdb can send.
+             */
+            message.info_messages.forEach(function (iMessage) {
+                console.log(iMessage);
+            });
+            message.warning_messages.forEach(function (wMessage) {
+                bubble.popup(wMessage, false);
+            });
+            message.error_messages.forEach(function (eMessage) {
+                showError(eMessage, 10000);
+            });
+
             /**
-             * For exception, we build a variable describing hte exception
-             * that c9 will inject in watch expressions.
+             * Exceptions handling
+             * We build a variable describing the exception
+             * that c9 will inject into  "Watch Expressions".
              */
             if (message.exception) {
                 showError("IKpdb has detected an unmanaged exception \""+
@@ -219,16 +246,14 @@ define(function(require, exports, module) {
                 debug.getElement("btnStepOut").setAttribute("disabled", true);
                 debug.getElement("btnStepInto").setAttribute("disabled", true);
                 debug.getElement("btnStepOver").setAttribute("disabled", true);
-            }
-            else {
+            } else {
                 emit("break", { frame: stack[0], frames: stack });
                 if (stack.length == 1)
                     debug.getElement("btnStepOut").setAttribute("disabled", true);
             }
         }
 
-
-        /*
+        /*****
          * Set the debugger state and emit state change
          */
         function setState(_state) {
@@ -237,16 +262,20 @@ define(function(require, exports, module) {
             emit("stateChange", {state: state});
         }
 
+        /*****
+         * we can't use this since breakpoints function are called by cloud9
+         * not by user
+         * TODO: check with cloud9 a way to intercept user actions
+         */ 
         function breakpointManagementWarning(commandSpecificMessage) {
+            return;
             if(state == "running") {
                 var msg = "IKPdpb Error: You can't manage breakpoints while" +
-                          " programm is running. Breakpoints can be manipulated " +
-                          "before debugger launch or when programm is stopped. " +
+                          " program is running. Breakpoints can be manipulated " +
+                          "before debugger launch or when program is stopped. " +
                           commandSpecificMessage;
                 showError(msg, 10000);
-                bubble.popup(commandSpecificMessage, true, function() {
-                    console.log("Breakpoint Management warning bubble closed.");
-                });         
+                bubble.popup(commandSpecificMessage, false);
             };
         }
         
@@ -256,7 +285,7 @@ define(function(require, exports, module) {
             
             bp.data.file_name = bp.data.path.substring(1);  // IKPdb expects a filename so we remove leading /
             bp.data.line_number = bp.data.line + 1;  // IKPdb expects 1 based lines
-            ikpdbs.sendCommand("setBreakpoint", bp.data, function(err, reply) {
+            sendCommand("setBreakpoint", bp.data, function(err, reply) {
                 if (err)
                     return callback && callback(err);
                 if (reply.commandExecStatus == "error")
@@ -279,7 +308,7 @@ define(function(require, exports, module) {
             }
                 
             bp.data.breakpoint_number = bp.id;
-            ikpdbs.sendCommand("changeBreakpointState", bp.data, function(err) {
+            sendCommand("changeBreakpointState", bp.data, function(err) {
                 callback && callback(err, bp);
             });
         }
@@ -293,7 +322,7 @@ define(function(require, exports, module) {
             breakpointManagementWarning("Breakpoint removal request will be send to debugger at next programm break !.");
 
             bp.data.breakpoint_number = bp.id;
-            ikpdbs.sendCommand("clearBreakpoint", bp.data, function(err) {
+            sendCommand("clearBreakpoint", bp.data, function(err) {
                 callback && callback(err, bp);
             });
         }
@@ -390,7 +419,7 @@ define(function(require, exports, module) {
                         if (begin)
                             runScript(callback);
                         else
-                            sendExecutionCommand("getStatus", callback);
+                            sendCommand("getStatus", {}, callback);
                     });
                 });
             });
@@ -410,7 +439,7 @@ define(function(require, exports, module) {
                 "global": global,
                 "disableBreak": disableBreak
             };
-            ikpdbs.sendCommand("evaluate", args, function(err, reply) {
+            sendCommand("evaluate", args, function(err, reply) {
                 if (err) {
                     return callback(new Error("No value"));
                 }
@@ -433,7 +462,7 @@ define(function(require, exports, module) {
                 "name": variable.name,
                 "value": value
             };
-            ikpdbs.sendCommand("setVariable", args, function(err, reply) {
+            sendCommand("setVariable", args, function(err, reply) {
                 if (err)
                     return callback && callback(err);
                 callback && callback(null, variable);
@@ -448,7 +477,7 @@ define(function(require, exports, module) {
             if (!callback) 
                 callback = function() {};
                 
-            ikpdbs.sendCommand("reconnect", {}, function(err, reply) {
+            sendCommand("reconnect", {}, function(err, reply) {
                 var restart = !err && reply.executionStatus == "running";
                 sync(restart, callback);
             });
@@ -540,7 +569,7 @@ define(function(require, exports, module) {
         function getProperties(variable, callback) {
             // request children of a variable
             var args = { id: variable.ref, name: variable.name };
-            ikpdbs.sendCommand("getProperties", args, function(err, reply) {
+            sendCommand("getProperties", args, function(err, reply) {
                 if (err)
                     return callback && callback(err);
                 else if (reply.result.properties.length === 0)
@@ -559,7 +588,7 @@ define(function(require, exports, module) {
          * Retrieves a list of all the breakpoints that are set in the debugger.
          */
         function listBreakpoints(callback) {
-            ikpdbs.sendCommand("getBreakpoints", {}, function(err, response) {
+            sendCommand("getBreakpoints", {}, function(err, response) {
                 if(err) console.error("response", response)
                 // TODO: rework response.result content 
                 var breakpointList = response.result
