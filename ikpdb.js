@@ -70,17 +70,23 @@ define(function(require, exports, module) {
                  * Note that error messages ar only displayed if IKPdb returned
                  * an error.
                  */
-                reply.info_messages.forEach(function (iMessage) {
-                    console.log(iMessage);
-                });
-                reply.warning_messages.forEach(function (wMessage) {
-                    bubble.popup(wMessage, false);
-                });
+                if(reply) {
+                    // Display info and warning messages
+                    reply.info_messages.forEach(function (iMessage) {
+                        console.log(iMessage);
+                    });
+                    reply.warning_messages.forEach(function (wMessage) {
+                        bubble.popup(wMessage, false);
+                    });
+                }
 
                 if (err) {
-                    // Display errors 
-                    var errMessage = reply.error_messages.join(" ");
-                    showError(errMessage, 10000);
+                    // Display errors
+                    var errMessage;
+                    if(reply) {
+                        errMessage = reply.error_messages.join(" ");
+                        showError(errMessage, 10000);
+                    }
                     return callback && callback(err);
                 }
                 
@@ -124,7 +130,7 @@ define(function(require, exports, module) {
         }
 
         /**
-         * Build individual variable objects from GDB output
+         * Build individual variable objects from IKPdb output
          */
         function buildVariable(variable, scope) {
             if (variable == null) return;
@@ -144,7 +150,7 @@ define(function(require, exports, module) {
         }
 
         /**
-         * Create a scope and variables from data received from GDB
+         * Create a scope and variables from data received from IKPdb
          */
         function buildScopeVariables(frame_vars, scope_index, frame_index, vars) {
             var scope = new Scope({
@@ -363,7 +369,7 @@ define(function(require, exports, module) {
 
                 /* There exist two sets of breakpoints. One local as shown
                  * in the GUI, L, and one "remote" that already exists in
-                 * GDB's state, R.
+                 * IKPdb's state, R.
                  * Syncing L and R must prioritize L's elements. We'll
                  * create three sets:
                  * to_remove = R\L (or {x∈R|x∉L})
@@ -385,7 +391,7 @@ define(function(require, exports, module) {
                     // test for membership of bp in remoteBkpts
                     for (var x = 0, y = remoteBkpts.length; x < y; x++) {
                         var rbp = remoteBkpts[x];
-                        if (bp.text == rbp.text && bp.line == rbp.line &&
+                        if (bp.path == rbp.path && bp.line == rbp.line &&
                             bp.condition == rbp.condition) {
                             // make sure synced BP has correct id
                             bp.id = rbp.id;
@@ -403,7 +409,7 @@ define(function(require, exports, module) {
                         synced.push(bp);
                 }
 
-                // notify GDB of new breakpoints
+                // notify IKPDb of new breakpoints
                 manyBreakpoints(to_add, setBreakpoint, function(added, fail) {
                     // successfully created BPs are now synced
                     synced = synced.concat(added);
@@ -485,20 +491,18 @@ define(function(require, exports, module) {
 
         
         function attach(_socket, reconnect, callback) {
-            console.log("entering attach(_socket, reconnect="+reconnect+" ,callback)");
+            //console.debug("Entering IKPdb Plugin attach(_socket", _socket, "reconnect=", reconnect," ,callback=", callback,")");
             
             debugger_socket = _socket;
             
             // The back event is fired when the socket reconnects
-            debugger_socket.on("back", function(err) {
-                console.log("ikpdb debugger socket back... Not Implemented ! Must reconnect ?");
+            debugger_socket.on("back", function() {
                 reconnectSync();
             }, plugin);
             
             // The error event is fired when the socket fails to connect
             debugger_socket.on("error", function(err) {
-                console.log("ikpdb debugger socket error... Not Implemented !");
-                console.log(err);
+                console.error("IKPb debugger socket error !", err);
                 emit("error", err);
             }, plugin);
         
@@ -507,7 +511,7 @@ define(function(require, exports, module) {
             ikpdbs.attach(function() {
                 emit("connect");
 
-                // if we're reconnecting, check GDB's state
+                // if we're reconnecting, check IKPdb's state
                 if (reconnect)
                     reconnectSync(callback);
                 else
@@ -588,14 +592,21 @@ define(function(require, exports, module) {
          * Retrieves a list of all the breakpoints that are set in the debugger.
          */
         function listBreakpoints(callback) {
-            sendCommand("getBreakpoints", {}, function(err, response) {
-                if(err) console.error("response", response)
-                // TODO: rework response.result content 
-                var breakpointList = response.result
+            sendCommand("getBreakpoints", {}, function(err, reply) {
+                if(err) {
+                    console.error("getBreakpoints() error with response=", reply);
+                    return callback && callback(err, reply);
+                }
+                // we reprocess breakpoints list to adjust line numbers and file paths
+                reply.result.forEach(function(bp){
+                    bp.line =  bp.line_number - 1;
+                    bp.id = bp.breakpoint_number;
+                    bp.path = util.normalizePath(bp.file_name);
+                })  
+                var breakpointList = reply.result
                 callback(null, breakpointList);
             });
         }
-        
         
         /***** Register and define API *****/
         
