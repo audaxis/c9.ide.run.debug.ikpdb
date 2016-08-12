@@ -114,19 +114,14 @@ define(function(require, exports, module) {
             sendCommand("stepOut", {}, callback);
         }
 
-        /**
-         * Called by Cloud9 when user clic on the Resume / F8 button
-         */
+        /* Called by Cloud9 when user clic on the Resume / F8 button  */
         function resume(callback) {
             sendCommand("resume", {}, callback);
         }
 
-        /**
-         * Called by Cloud9 when user clic on Suspend
-         */
-        function suspend() {
-            var errorMessage =  "IKPdb Error: Suspend is not supported (yet...) !";
-            showError(errorMessage, 15000);
+        /* Called by Cloud9 when user clic on Suspend */
+        function suspend(callback) {
+            sendCommand("suspend", {}, callback);
         }
 
         /**
@@ -301,7 +296,6 @@ define(function(require, exports, module) {
             });
         }
 
-
         /**
          * Called by c9 when user clic on enable / disable breakpoints
          */
@@ -319,7 +313,6 @@ define(function(require, exports, module) {
             });
         }
         
-
         /**
          * Called by c9 when user remove an existing breakpoint.
          */
