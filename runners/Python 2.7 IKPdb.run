@@ -6,7 +6,7 @@
     "${debug?-m}",
     "${debug?ikpdb}",
     "${debug?--ikpdb-port=15475}",
-    "${debug?--ikpdb-log=G}",   
+//    "${debug?--ikpdb-log=G}",   
 //    "${debug?--ikpdb-log=xf}",  // Uncomment this line to log debugger output  
     "$file",
     "$args"
