@@ -5,9 +5,9 @@
     "python2",
     "${debug?-m}",
     "${debug?ikpdb}",
-    "${debug?--ikpdb-port=15475}",
-//    "${debug?--ikpdb-log=G}",   
-//    "${debug?--ikpdb-log=xf}",  // Uncomment this line to log debugger output  
+    "${debug?--ikpdb-port=15471}",
+    "${debug?--ikpdb-working-directory=$project_path}",
+//    "${debug?--ikpdb-log=gxf}",  // Uncomment this line to log debugger output  
     "$file",
     "$args"
   ],
@@ -17,7 +17,7 @@
   "env": {
     "PYTHONPATH": "$python_path"
   },
-  "debugport": 15475,
+  "debugport": 15471,
   "debugger": "pythondebug",
   "executable": "$file",
   "maxdepth": 50
