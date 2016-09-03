@@ -1,3 +1,9 @@
+/**
+ * This file is part of IKPdb Cloud9 debugger plugin.
+ * Copyright 2016, Cyril MORISSE
+ * Licence MIT. See LICENCE at repository root
+ */
+
 define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "c9", "util", "debugger", "dialog.error", 
