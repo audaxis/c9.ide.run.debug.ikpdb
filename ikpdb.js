@@ -1,6 +1,6 @@
 /**
  * This file is part of IKPdb Cloud9 debugger plugin.
- * Copyright 2016, Cyril MORISSE
+ * Copyright (c) 2016 by Cyril MORISSE, Audaxis
  * Licence MIT. See LICENCE at repository root
  */
 
@@ -38,7 +38,7 @@ define(function(require, exports, module) {
         var TYPE = "pythondebug";
         var PROXY = require("text!./netproxy.js");
         
-        var plugin = new Plugin("inouk.io", main.consumes);
+        var plugin = new Plugin("Cyril Morisse,Audaxis", main.consumes);
         var emit = plugin.getEmitter();
         // TODO: emit.setMaxListeners(1000);
     
