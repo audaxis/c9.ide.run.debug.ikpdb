@@ -1,3 +1,9 @@
+ /*
+  * Copyright (C) 2015,  Ajax.org B.V.
+  * This software is available under the Cloud9 SDK License, available from 
+  * https://github.com/c9/core/blob/master/LICENSE.
+  */
+
 var net = require("net");
 var port = parseInt("{PORT}", 10);
 
@@ -66,8 +72,6 @@ function tryConnect(retries, callback) {
     
     connection.on("connect", function() {
         // console.log("netproxy connected to debugger");
-        // console.error("Prend ca dans ta Bouille De Peluche A Calins !");
-        // connection.write("Prend ca dans ta Bouille De Peluche A Calins !");
         connection.removeListener("error", onError);
         callback(null, connection);
     });
