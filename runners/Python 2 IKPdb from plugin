@@ -25,7 +25,6 @@
   },
   "debugport": 15471,
   "debugger": "pythondebug",
-  "executable": "$file",
   "maxdepth": 50
 
 }

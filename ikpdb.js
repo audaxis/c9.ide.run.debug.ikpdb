@@ -525,7 +525,7 @@ define(function(require, exports, module) {
          * Clean up the debugger connection
          */
         function detach() {
-            console.log("entering detach()");
+            // console.log("entering detach()");
             if (ikpdbs)
                 ikpdbs.detach();
 
