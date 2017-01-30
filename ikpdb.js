@@ -54,10 +54,10 @@ define(function(require, exports, module) {
         var SCOPES = ["Parameters", "Locals"];
         
         /***** Lifecycle *****/
-        plugin.on("load", function(){
+        plugin.on("load", function() {
             debug.registerDebugger(TYPE, plugin);
         });
-        plugin.on("unload", function(){
+        plugin.on("unload", function() {
             debug.unregisterDebugger(TYPE, plugin);
             attached = false;
             stack = null;
@@ -76,7 +76,7 @@ define(function(require, exports, module) {
                  * Note that error messages ar only displayed if IKPdb returned
                  * an error.
                  */
-                if(reply) {
+                if (reply) {
                     // Display info and warning messages
                     reply.info_messages.forEach(function (iMessage) {
                         console.log(iMessage);
@@ -89,14 +89,14 @@ define(function(require, exports, module) {
                 if (err) {
                     // Display errors
                     var errMessage;
-                    if(reply) {
+                    if (reply) {
                         errMessage = reply.error_messages.join(" ");
                         showError(errMessage, 10000);
                     }
                     return callback && callback(err);
                 }
                 
-                if(reply.result.executionStatus)
+                if (reply.result.executionStatus)
                     setState(reply.result.executionStatus);
                 
                 callback && callback(err, reply);
@@ -234,8 +234,8 @@ define(function(require, exports, module) {
              * that c9 will inject into  "Watch Expressions".
              */
             if (message.exception) {
-                showError("IKpdb has detected an unmanaged exception \""+
-                          message.exception.type+"\":"+message.exception.info+
+                showError("IKpdb has detected an unmanaged exception \"" +
+                          message.exception.type + "\":" + message.exception.info +
                           ". Execution has stopped!",
                           10000);
                 var exception = new Variable({
@@ -248,7 +248,7 @@ define(function(require, exports, module) {
                     scope: "Locals"
                 });
                 
-                emit("exception", {frame: stack[0], frames: stack, exception: exception});
+                emit("exception", { frame: stack[0], frames: stack, exception: exception });
                 debug.getElement("btnSuspend").setAttribute("disabled", true);
                 debug.getElement("btnStepOut").setAttribute("disabled", true);
                 debug.getElement("btnStepInto").setAttribute("disabled", true);
@@ -266,7 +266,7 @@ define(function(require, exports, module) {
         function setState(_state) {
             if (state === _state) return;
             state = _state;
-            emit("stateChange", {state: state});
+            emit("stateChange", { state: state });
         }
 
         /*****
@@ -276,14 +276,14 @@ define(function(require, exports, module) {
          */ 
         function breakpointManagementWarning(commandSpecificMessage) {
             return;
-            if(state == "running") {
+            if (state == "running") {
                 var msg = "IKPdpb Error: You can't manage breakpoints while" +
                           " program is running. Breakpoints can be manipulated " +
                           "before debugger launch or when program is stopped. " +
                           commandSpecificMessage;
                 showError(msg, 10000);
                 bubble.popup(commandSpecificMessage, false);
-            };
+            }
         }
         
         function setBreakpoint(bp, callback) {
@@ -309,8 +309,8 @@ define(function(require, exports, module) {
             // TODO: Check with c9 how we can prevent user to set breakpoint
             breakpointManagementWarning("Breakpoint modification request will be send to debugger at next programm break !.");
             
-            if(!bp.data) {
-                console.error("Missing bp.data in changeBreakpoint(",bp,") ");
+            if (!bp.data) {
+                console.error("Missing bp.data in changeBreakpoint(", bp, ") ");
             }
                 
             bp.data.breakpoint_number = bp.id;
@@ -351,7 +351,7 @@ define(function(require, exports, module) {
                     }
                     else {
                         breakpoints[i].id = bp.id;
-                        _setBPs(breakpoints, failed, callback, i+1);
+                        _setBPs(breakpoints, failed, callback, i + 1);
                     }
                 });
             }
@@ -518,7 +518,7 @@ define(function(require, exports, module) {
             });
 
             // Update GUI
-            emit("frameActivate", {frame: null});
+            emit("frameActivate", { frame: null });
         }        
 
         /*
@@ -529,7 +529,7 @@ define(function(require, exports, module) {
             if (ikpdbs)
                 ikpdbs.detach();
 
-            emit("frameActivate", {frame: null});
+            emit("frameActivate", { frame: null });
             setState(null);
 
             debugger_socket = null;
@@ -550,7 +550,7 @@ define(function(require, exports, module) {
         function getSources(callback) {
             var sources = [new Source()];
             callback(null, sources);
-            emit("sources", {sources: sources});
+            emit("sources", { sources: sources });
         }
 
         /*  Not applicable  */
@@ -592,17 +592,17 @@ define(function(require, exports, module) {
          */
         function listBreakpoints(callback) {
             sendCommand("getBreakpoints", {}, function(err, reply) {
-                if(err) {
+                if (err) {
                     console.error("getBreakpoints() error with response=", reply);
                     return callback && callback(err, reply);
                 }
                 // we reprocess breakpoints list to adjust line numbers and file paths
-                reply.result.forEach(function(bp){
-                    bp.line =  bp.line_number - 1;
+                reply.result.forEach(function(bp) {
+                    bp.line = bp.line_number - 1;
                     bp.id = bp.breakpoint_number;
                     bp.path = util.normalizePath(bp.file_name);
-                })  
-                var breakpointList = reply.result
+                });  
+                var breakpointList = reply.result;
                 callback(null, breakpointList);
             });
         }
@@ -659,12 +659,12 @@ define(function(require, exports, module) {
              * </table>
              * @readonly
              */
-            get state(){ return state; },
+            get state() { return state; },
             
             /**
              * 
              */
-            get attached(){ return attached; },
+            get attached() { return attached; },
             
             /**
              * Whether the debugger will break when it encounters any exception.
@@ -672,7 +672,7 @@ define(function(require, exports, module) {
              * @property {Boolean} breakOnExceptions
              * @readonly
              */
-            get breakOnExceptions(){ return false; },
+            get breakOnExceptions() { return false; },
             
             /**
              * Whether the debugger will break when it encounters an uncaught 
@@ -680,7 +680,7 @@ define(function(require, exports, module) {
              * @property {Boolean} breakOnUncaughtExceptions
              * @readonly
              */
-            get breakOnUncaughtExceptions(){ return true; },
+            get breakOnUncaughtExceptions() { return true; },
             
             _events: [
                 "attach",
