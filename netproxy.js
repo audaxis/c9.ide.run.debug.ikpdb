@@ -36,7 +36,7 @@ var server = net.createServer(function(client) {
     });
     
     browserClient.on("data", function(data) {
-        console.error("data = "+data);
+        console.error("data = " + data);
         if (debugClient) {
             debugClient.write(data);
         } else {
@@ -62,7 +62,7 @@ server.listen(port + 1, host, function() {
 });
 
 // Handle errors
-server.on("error", function(){ process.exit(0); });
+server.on("error", function() { process.exit(0); });
 
 function tryConnect(retries, callback) {
     if (!retries)
@@ -126,7 +126,7 @@ tryConnect(MAX_RETRIES, function(err, connection) {
 });
 
 
-var I=0;
+var I = 0;
 function start() {
     if (++I == 2)
         send("ß");
