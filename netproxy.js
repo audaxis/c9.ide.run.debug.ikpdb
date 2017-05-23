@@ -37,7 +37,7 @@ var server = net.createServer(function(client) {
     });
     
     browserClient.on("data", function(data) {
-        console.error("data = " + data);
+        //console.log("data = " + data);
         if (debugClient) {
             debugClient.write(data);
         } else {
